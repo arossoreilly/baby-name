@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Guess our baby's name</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1b;
+    --muted: #787c7e;
+    --border: #d3d6da;
+    --border-filled: #878a8c;
+    --correct: #6aaa64;
+    --present: #c9b458;
+    --absent: #787c7e;
+    --key-bg: #d3d6da;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.01em; }
+  .subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; }
+
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding: 8px 8px 12px;
+  }
+
+  .board-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .board {
+    display: grid;
+    grid-template-rows: repeat(6, 1fr);
+    gap: 5px;
+    width: min(330px, 86vw);
+    aspect-ratio: 5 / 6;
+    max-height: 100%;
+  }
+
+  .row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+
+  .tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border);
+    font-size: clamp(24px, 7vw, 32px);
+    font-weight: 700;
+    text-transform: uppercase;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .tile.filled {
+    border-color: var(--border-filled);
+    animation: pop 0.1s ease-in-out;
+  }
+  @keyframes pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+
+  .tile.flip { animation: flip 0.55s ease forwards; }
+  @keyframes flip {
+    0%   { transform: rotateX(0); }
+    50%  { transform: rotateX(90deg); }
+    100% { transform: rotateX(0); }
+  }
+
+  .tile.correct { background: var(--correct); border-color: var(--correct); color: #fff; }
+  .tile.present { background: var(--present); border-color: var(--present); color: #fff; }
+  .tile.absent  { background: var(--absent);  border-color: var(--absent);  color: #fff; }
+
+  .row.shake { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  .row.bounce .tile.correct { animation: bounce 0.5s ease; }
+  .row.bounce .tile.correct:nth-child(1) { animation-delay: 0.0s; }
+  .row.bounce .tile.correct:nth-child(2) { animation-delay: 0.1s; }
+  .row.bounce .tile.correct:nth-child(3) { animation-delay: 0.2s; }
+  .row.bounce .tile.correct:nth-child(4) { animation-delay: 0.3s; }
+  .row.bounce .tile.correct:nth-child(5) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%   { transform: translateY(0); }
+    40%  { transform: translateY(-18px); }
+    60%  { transform: translateY(0); }
+    80%  { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+  }
+
+  .keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+    flex-shrink: 0;
+    padding: 0 4px;
+    margin-top: 8px;
+  }
+  .key-row { display: flex; gap: 5px; justify-content: center; }
+  .key {
+    flex: 1;
+    height: 54px;
+    background: var(--key-bg);
+    color: var(--text);
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, color 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .key:active { transform: scale(0.94); }
+  .key.wide { flex: 1.5; font-size: 11px; letter-spacing: 0.05em; }
+  .key.correct { background: var(--correct); color: #fff; }
+  .key.present { background: var(--present); color: #fff; }
+  .key.absent  { background: var(--absent);  color: #fff; }
+
+  .toast {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1b;
+    color: #fff;
+    padding: 11px 18px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    padding: 24px;
+  }
+  .modal.show { opacity: 1; pointer-events: auto; }
+
+  .modal-content {
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .eyebrow {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 14px;
+  }
+
+  /* ----- Reveal section (win or manual reveal) ----- */
+  .name-stack {
+    margin: 0 auto 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .name-tiles { display: flex; gap: 5px; justify-content: center; }
+  .name-tile {
+    width: clamp(44px, 12vw, 56px);
+    height: clamp(44px, 12vw, 56px);
+    background: var(--correct);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(22px, 6.5vw, 30px);
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 2px;
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
+  .reveal-section.active .name-tile { animation: tileReveal 0.5s ease forwards; }
+  .reveal-section.active .name-tile:nth-child(1) { animation-delay: 0.4s; }
+  .reveal-section.active .name-tile:nth-child(2) { animation-delay: 0.6s; }
+  .reveal-section.active .name-tile:nth-child(3) { animation-delay: 0.8s; }
+  .reveal-section.active .name-tile:nth-child(4) { animation-delay: 1.0s; }
+  .reveal-section.active .name-tile:nth-child(5) { animation-delay: 1.2s; }
+  @keyframes tileReveal {
+    0%   { opacity: 0; transform: rotateX(90deg); }
+    100% { opacity: 1; transform: rotateX(0); }
+  }
+
+  .full-name {
+    font-size: clamp(20px, 5.5vw, 26px);
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 24px;
+    opacity: 0;
+    letter-spacing: 0.01em;
+  }
+  .reveal-section.active .full-name { animation: fadeUp 0.6s ease 1.5s forwards; }
+
+  .message {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin-top: 18px;
+    opacity: 0;
+  }
+  .reveal-section.active .message { animation: fadeUp 0.6s ease 1.8s forwards; }
+
+  .heart {
+    font-size: 28px;
+    margin-top: 16px;
+    opacity: 0;
+  }
+  .reveal-section.active .heart { animation: fadeUp 0.6s ease 2.1s forwards; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ----- Hint section (loss) ----- */
+  .hint-title {
+    font-size: clamp(28px, 7vw, 34px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 22px;
+    color: var(--text);
+  }
+  .hint-icons {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    margin: 4px 0 22px;
+    font-size: 36px;
+    line-height: 1;
+  }
+  .hint-icons span {
+    display: inline-block;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .hint-section.active .hint-icons span:nth-child(1) { animation-delay: 0.2s; }
+  .hint-section.active .hint-icons span:nth-child(2) { animation-delay: 0.4s; }
+  .hint-section.active .hint-icons span:nth-child(3) { animation-delay: 0.6s; }
+
+  .hint-clue {
+    font-size: clamp(18px, 4.8vw, 22px);
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .hint-tagline {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 28px;
+  }
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .btn {
+    width: 100%;
+    max-width: 260px;
+    padding: 14px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, color 0.2s, transform 0.1s, border-color 0.2s;
+    border: 2px solid var(--text);
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--text); color: #fff; }
+  .btn-primary:hover { background: #000; border-color: #000; }
+  .btn-secondary { background: transparent; color: var(--text); }
+  .btn-secondary:hover { background: #f5f5f5; }
+
+  canvas#confetti {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  @media (max-height: 700px) {
+    .key { height: 46px; }
+    header { padding: 10px 16px 8px; }
+  }
+  @media (max-height: 620px) {
+    .key { height: 40px; font-size: 14px; }
+    .tile { font-size: clamp(20px, 6.5vw, 28px); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Guess our baby's name</h1>
+  <div class="subtitle">5 letters · 6 tries</div>
+</header>
+
+<main>
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+  <div class="keyboard" id="keyboard"></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+
+    <!-- HINT (loss) -->
+    <div class="section hint-section" id="hintSection">
+      <div class="eyebrow">So close</div>
+      <h2 class="hint-title">Here's a clue</h2>
+      <div class="hint-icons">
+        <span>👑</span><span>🐈</span><span>⛪</span>
+      </div>
+      <p class="hint-clue">A king, a cat, and a saint.</p>
+      <p class="hint-tagline">All three share our boy's name.</p>
+      <div class="buttons">
+        <button class="btn btn-primary" id="tryAgainBtn">Try Again</button>
+        <button class="btn btn-secondary" id="revealBtn">Just Tell Me</button>
+      </div>
+    </div>
+
+    <!-- REVEAL (win, or chose to reveal) -->
+    <div class="section reveal-section" id="revealSection">
+      <div class="eyebrow" id="revealEyebrow">It's a boy</div>
+      <div class="name-stack">
+        <div class="name-tiles">
+          <div class="name-tile">F</div>
+          <div class="name-tile">E</div>
+          <div class="name-tile">L</div>
+          <div class="name-tile">I</div>
+          <div class="name-tile">X</div>
+        </div>
+      </div>
+      <div class="full-name">Felix William O'Reilly</div>
+      <div class="message">We can't wait for you to meet him.</div>
+      <div class="heart">💙</div>
+    </div>
+
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+  const ANSWER = 'FELIX';
+  const MAX_GUESSES = 6;
+  const WORD_LENGTH = 5;
+
+  let currentRow = 0;
+  let currentTile = 0;
+  let gameOver = false;
+  let isRevealing = false;
+
+  const board = document.getElementById('board');
+  const keyboard = document.getElementById('keyboard');
+  const toastEl = document.getElementById('toast');
+  const modal = document.getElementById('modal');
+  const hintSection = document.getElementById('hintSection');
+  const revealSection = document.getElementById('revealSection');
+  const revealEyebrow = document.getElementById('revealEyebrow');
+  const tryAgainBtn = document.getElementById('tryAgainBtn');
+  const revealBtn = document.getElementById('revealBtn');
+
+  // Build board
+  for (let r = 0; r < MAX_GUESSES; r++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.id = `row-${r}`;
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.id = `tile-${r}-${c}`;
+      row.appendChild(tile);
+    }
+    board.appendChild(row);
+  }
+
+  // Build keyboard (NYT layout)
+  const layout = [
+    ['Q','W','E','R','T','Y','U','I','O','P'],
+    ['A','S','D','F','G','H','J','K','L'],
+    ['ENTER','Z','X','C','V','B','N','M','BKSP']
+  ];
+
+  layout.forEach(rowLetters => {
+    const kRow = document.createElement('div');
+    kRow.className = 'key-row';
+    rowLetters.forEach(letter => {
+      const btn = document.createElement('button');
+      btn.className = 'key';
+      if (letter === 'ENTER') {
+        btn.textContent = 'ENTER';
+        btn.classList.add('wide');
+        btn.dataset.key = 'ENTER';
+      } else if (letter === 'BKSP') {
+        btn.innerHTML = '⌫';
+        btn.classList.add('wide');
+        btn.style.fontSize = '20px';
+        btn.dataset.key = 'BKSP';
+      } else {
+        btn.textContent = letter;
+        btn.id = `key-${letter}`;
+        btn.dataset.key = letter;
+      }
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        handleKey(btn.dataset.key);
+      });
+      kRow.appendChild(btn);
+    });
+    keyboard.appendChild(kRow);
+  });
+
+  function handleKey(key) {
+    if (gameOver || isRevealing) return;
+    if (key === 'ENTER') return submitGuess();
+    if (key === 'BKSP') return deleteLetter();
+    if (/^[A-Z]$/.test(key) && currentTile < WORD_LENGTH) addLetter(key);
+  }
+
+  function addLetter(letter) {
+    const tile = document.getElementById(`tile-${currentRow}-${currentTile}`);
+    tile.textContent = letter;
+    tile.classList.add('filled');
+    currentTile++;
+  }
+
+  function deleteLetter() {
+    if (currentTile === 0) return;
+    currentTile--;
+    const tile = document.getElementById(`tile-${currentRow}-${currentTile}`);
+    tile.textContent = '';
+    tile.classList.remove('filled');
+  }
+
+  function submitGuess() {
+    if (currentTile < WORD_LENGTH) {
+      shakeRow();
+      showToast('Not enough letters');
+      return;
+    }
+    let guess = '';
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      guess += document.getElementById(`tile-${currentRow}-${c}`).textContent;
+    }
+    revealRow(guess);
+  }
+
+  function revealRow(guess) {
+    const result = scoreGuess(guess, ANSWER);
+    isRevealing = true;
+    const rowEl = document.getElementById(`row-${currentRow}`);
+
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const tile = document.getElementById(`tile-${currentRow}-${c}`);
+      setTimeout(() => {
+        tile.classList.add('flip');
+        setTimeout(() => {
+          tile.classList.remove('filled');
+          tile.classList.add(result[c]);
+          updateKey(guess[c], result[c]);
+        }, 275);
+      }, c * 300);
+    }
+
+    const totalDelay = WORD_LENGTH * 300 + 300;
+    setTimeout(() => {
+      isRevealing = false;
+      if (guess === ANSWER) {
+        gameOver = true;
+        rowEl.classList.add('bounce');
+        setTimeout(() => showReveal(true), 700);
+      } else if (currentRow === MAX_GUESSES - 1) {
+        gameOver = true;
+        setTimeout(showHint, 600);
+      } else {
+        currentRow++;
+        currentTile = 0;
+      }
+    }, totalDelay);
+  }
+
+  function scoreGuess(guess, answer) {
+    const result = new Array(WORD_LENGTH).fill('absent');
+    const used = new Array(WORD_LENGTH).fill(false);
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (guess[i] === answer[i]) {
+        result[i] = 'correct';
+        used[i] = true;
+      }
+    }
+    for (let i = 0; i < WORD_LENGTH; i++) {
+      if (result[i] === 'correct') continue;
+      for (let j = 0; j < WORD_LENGTH; j++) {
+        if (!used[j] && guess[i] === answer[j]) {
+          result[i] = 'present';
+          used[j] = true;
+          break;
+        }
+      }
+    }
+    return result;
+  }
+
+  function updateKey(letter, status) {
+    const key = document.getElementById(`key-${letter}`);
+    if (!key) return;
+    const rank = { correct: 3, present: 2, absent: 1 };
+    const cur = ['correct','present','absent'].find(c => key.classList.contains(c));
+    if (!cur || rank[status] > rank[cur]) {
+      key.classList.remove('correct','present','absent');
+      key.classList.add(status);
+    }
+  }
+
+  function shakeRow() {
+    const rowEl = document.getElementById(`row-${currentRow}`);
+    rowEl.classList.add('shake');
+    setTimeout(() => rowEl.classList.remove('shake'), 450);
+  }
+
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), 1400);
+  }
+
+  // ---- Modal flows ----
+  function showHint() {
+    hintSection.classList.add('active');
+    modal.classList.add('show');
+  }
+
+  function showReveal(won) {
+    revealEyebrow.textContent = won ? "It's a boy" : "His name is";
+    hintSection.classList.remove('active');
+    revealSection.classList.add('active');
+    modal.classList.add('show');
+    setTimeout(() => fireConfetti(), 400);
+  }
+
+  tryAgainBtn.addEventListener('click', () => location.reload());
+  revealBtn.addEventListener('click', () => showReveal(false));
+
+  // ---------- Confetti ----------
+  const canvas = document.getElementById('confetti');
+  const ctx = canvas.getContext('2d');
+  function sizeCanvas() {
+    canvas.width = window.innerWidth * devicePixelRatio;
+    canvas.height = window.innerHeight * devicePixelRatio;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+  sizeCanvas();
+  window.addEventListener('resize', sizeCanvas);
+
+  const particles = [];
+  let animating = false;
+
+  function spawnBurst(x, y, count, palette, power = 1) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (Math.random() * 6 + 3) * power;
+      particles.push({
+        x, y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - Math.random() * 4,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        size: Math.random() * 7 + 5,
+        rot: Math.random() * Math.PI * 2,
+        vrot: (Math.random() - 0.5) * 0.4,
+        life: 1,
+        decay: 0.005 + Math.random() * 0.006,
+        shape: Math.random() < 0.5 ? 'rect' : 'circle'
+      });
+    }
+  }
+
+  function spawnRain(count, palette) {
+    const w = window.innerWidth;
+    for (let i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: -20,
+        vx: (Math.random() - 0.5) * 3,
+        vy: Math.random() * 3 + 2,
+        color: palette[Math.floor(Math.random() * palette.length)],
+        size: Math.random() * 7 + 4,
+        rot: Math.random() * Math.PI * 2,
+        vrot: (Math.random() - 0.5) * 0.3,
+        life: 1,
+        decay: 0.003,
+        shape: Math.random() < 0.5 ? 'rect' : 'circle'
+      });
+    }
+  }
+
+  function tick() {
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    let alive = 0;
+    for (const p of particles) {
+      if (p.life <= 0) continue;
+      p.vy += 0.15;
+      p.vx *= 0.99;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vrot;
+      p.life -= p.decay;
+      if (p.y > window.innerHeight + 30 || p.life <= 0) continue;
+      alive++;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+      ctx.fillStyle = p.color;
+      if (p.shape === 'rect') {
+        ctx.fillRect(-p.size / 2, -p.size / 3, p.size, p.size * 0.6);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    if (alive > 0) {
+      requestAnimationFrame(tick);
+    } else {
+      animating = false;
+      particles.length = 0;
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    }
+  }
+
+  function fireConfetti() {
+    const palette = ['#6aaa64', '#c9b458', '#5b9eff', '#a3d9ff', '#ffd166', '#ff8fab', '#06d6a0'];
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight * 0.4;
+
+    spawnBurst(cx - window.innerWidth * 0.15, cy, 80, palette, 1);
+    spawnBurst(cx + window.innerWidth * 0.15, cy, 80, palette, 1);
+
+    if (!animating) {
+      animating = true;
+      requestAnimationFrame(tick);
+    }
+
+    setTimeout(() => spawnRain(60, palette), 600);
+    setTimeout(() => spawnRain(60, palette), 1400);
+    setTimeout(() => spawnBurst(cx, cy, 100, palette, 1.2), 1000);
+  }
+
+  // Physical keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') return handleKey('ENTER');
+    if (e.key === 'Backspace') return handleKey('BKSP');
+    if (/^[a-zA-Z]$/.test(e.key)) handleKey(e.key.toUpperCase());
+  });
+})();
+</script>
+
+</body>
+</html>
