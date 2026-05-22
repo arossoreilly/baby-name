@@ -444,9 +444,9 @@
  
   /* ----- Hint reveal pulse on keyboard ----- */
   @keyframes keyPulse {
-    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(106,170,100,0.7); }
-    50%  { transform: scale(1.18); box-shadow: 0 0 0 14px rgba(106,170,100,0); }
-    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(106,170,100,0); }
+    0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(201,180,88,0.75); }
+    50%  { transform: scale(1.18); box-shadow: 0 0 0 14px rgba(201,180,88,0); }
+    100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(201,180,88,0); }
   }
   .key.hint-pulse { animation: keyPulse 0.7s ease-out; }
  
@@ -896,7 +896,8 @@
     setTimeout(() => { intro.style.display = 'none'; }, 450);
   });
  
-  // Hint: each tap turns the next letter green on the keyboard
+  // Hint: each tap turns the next letter yellow on the keyboard
+  // (letter is in the answer; player still needs to find its position)
   // Order: E, I, L, X, F (most ambiguous → most revealing)
   // Skips letters the player has already discovered (green or yellow on keyboard).
   const HINT_ORDER = ['E', 'I', 'L', 'X', 'F'];
@@ -906,7 +907,7 @@
       const key = document.getElementById(`key-${letter}`);
       if (!key) continue;
       if (key.classList.contains('correct') || key.classList.contains('present')) continue;
-      updateKey(letter, 'correct');
+      updateKey(letter, 'present');
       key.classList.add('hint-pulse');
       setTimeout(() => key.classList.remove('hint-pulse'), 700);
       break;
@@ -1039,4 +1040,3 @@
  
 </body>
 </html>
- 
