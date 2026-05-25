@@ -339,7 +339,6 @@
     margin-top: 24px;
     padding: 20px 6px;
     border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
     opacity: 0;
   }
   .reveal-section.active .stats { animation: fadeUp 0.6s ease 2.0s forwards; }
@@ -359,6 +358,45 @@
     letter-spacing: 0.01em;
   }
 
+  .company {
+    margin-top: 22px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    text-align: left;
+  }
+  .reveal-section.active .company { animation: fadeUp 0.6s ease 2.3s forwards; }
+  .company-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .company-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .company-row {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+  .company-name {
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .company-desc {
+    color: var(--muted);
+  }
+
   .message {
     font-size: 15px;
     line-height: 1.55;
@@ -366,14 +404,14 @@
     margin-top: 20px;
     opacity: 0;
   }
-  .reveal-section.active .message { animation: fadeUp 0.6s ease 2.3s forwards; }
+  .reveal-section.active .message { animation: fadeUp 0.6s ease 2.7s forwards; }
 
   .heart {
     font-size: 26px;
     margin-top: 14px;
     opacity: 0;
   }
-  .reveal-section.active .heart { animation: fadeUp 0.6s ease 2.6s forwards; }
+  .reveal-section.active .heart { animation: fadeUp 0.6s ease 3.0s forwards; }
 
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
@@ -899,6 +937,28 @@
         <div class="stat">
           <div class="stat-label">Length</div>
           <div class="stat-value">00 in</div>
+        </div>
+      </div>
+
+      <div class="company">
+        <div class="company-label">In good company</div>
+        <div class="company-list">
+          <div class="company-row">
+            <span class="company-name">⚾ Félix Hernández</span>
+            <span class="company-desc">— Cy Young-winning Mariners ace, "King Felix"</span>
+          </div>
+          <div class="company-row">
+            <span class="company-name">🐈 Felix the Cat</span>
+            <span class="company-desc">— Silent film star, the first animated icon</span>
+          </div>
+          <div class="company-row">
+            <span class="company-name">⛪ Saint Felix of Cantalice</span>
+            <span class="company-desc">— 16th-century Capuchin friar, patron of domestic animals</span>
+          </div>
+          <div class="company-row">
+            <span class="company-name">🎬 Felix Leiter</span>
+            <span class="company-desc">— Bond's CIA pal across 60 years of films</span>
+          </div>
         </div>
       </div>
 
