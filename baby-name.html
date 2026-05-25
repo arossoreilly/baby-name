@@ -691,23 +691,6 @@
   }
   .play-btn:hover { background: #000; }
   .play-btn:active { transform: scale(0.97); }
-
-  .intro-help-link {
-    background: none;
-    border: none;
-    font-family: 'Zilla Slab', Georgia, serif;
-    font-size: 15px;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 6px 12px;
-    margin-top: -42px;
-    margin-bottom: 40px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    text-decoration-color: rgba(120,124,126,0.4);
-    transition: color 0.2s;
-  }
-  .intro-help-link:hover { color: var(--text); }
   .intro-footer {
     text-align: center;
     font-family: 'Zilla Slab', Georgia, serif;
@@ -748,7 +731,6 @@
   <h1 class="intro-title">Wordle</h1>
   <p class="intro-subtitle">O'Reilly baby name edition</p>
   <button class="play-btn" id="playBtn">Play</button>
-  <button class="intro-help-link" id="introHelpBtn">New to Wordle?</button>
   <div class="intro-footer">
     <div class="footer-date">May 23, 2026</div>
     <div class="footer-meta">No. 1</div>
@@ -1168,9 +1150,6 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && helpSheet.classList.contains('show')) closeHelp();
   });
-
-  // Intro screen help link opens the same sheet
-  document.getElementById('introHelpBtn').addEventListener('click', openHelp);
 
   // Hint: each tap turns the next letter yellow on the keyboard
   // (letter is in the answer; player still needs to find its position)
